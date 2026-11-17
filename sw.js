@@ -2,7 +2,7 @@
 // Online: always fetch the latest files (bypassing the browser's HTTP cache,
 // which GitHub Pages lets keep files for 10 minutes) and save a copy.
 // Offline or very slow network: serve the saved copy.
-const CACHE = 'grocery-v6';
+const CACHE = 'grocery-v7';
 const ASSETS = [
   './', 'index.html', 'styles.css', 'app.js', 'lib.js', 'format.js', 'receipts.js', 'insights.js',
   'receipts-ui.js', 'sample-data.js', 'manifest.webmanifest',
