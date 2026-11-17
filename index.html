@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f7d4f">
+  <meta name="description" content="A simple, offline-friendly grocery shopping list.">
+  <title>Grocery List</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="list-picker">
+      <select id="listSelect" aria-label="Current list"></select>
+      <button id="newListBtn" class="icon-btn" title="New list" aria-label="New list">＋</button>
+      <button id="listMenuBtn" class="icon-btn" title="List options" aria-label="List options">⋯</button>
+    </div>
+    <p id="summary" class="summary" aria-live="polite"></p>
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+  </header>
+
+  <main>
+    <form id="addForm" class="add-form" autocomplete="off">
+      <input id="itemName" list="suggestions" placeholder="Add an item, e.g. 2 avocados" aria-label="Item name" required>
+      <datalist id="suggestions"></datalist>
+      <select id="itemCategory" aria-label="Category"></select>
+      <button type="submit" class="primary">Add</button>
+    </form>
+
+    <div class="toolbar">
+      <input id="searchInput" type="search" placeholder="Filter items" aria-label="Filter items">
+      <label class="toggle"><input type="checkbox" id="hideChecked"> Hide checked</label>
+    </div>
+
+    <section id="listContainer" aria-label="Items"></section>
+
+    <p id="emptyState" class="empty" hidden>Your list is empty. Add something above.</p>
+
+    <div class="footer-actions">
+      <button id="clearCheckedBtn">Clear checked</button>
+      <button id="shareBtn">Share / copy list</button>
+    </div>
+  </main>
+
+  <dialog id="editDialog">
+    <form method="dialog" id="editForm">
+      <h2>Edit item</h2>
+      <label>Name <input id="editName" required></label>
+      <div class="row">
+        <label>Qty <input id="editQty" type="number" min="1" step="1"></label>
+        <label>Unit <input id="editUnit" placeholder="kg, pack…"></label>
+      </div>
+      <label>Price (each, optional) <input id="editPrice" type="number" min="0" step="0.01"></label>
+      <label>Category <select id="editCategory"></select></label>
+      <label>Note <input id="editNote" placeholder="brand, size…"></label>
+      <div class="dialog-actions">
+        <button value="delete" class="danger" id="deleteItemBtn">Delete</button>
+        <span class="spacer"></span>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="listDialog">
+    <form method="dialog">
+      <h2>List options</h2>
+      <div class="dialog-actions column">
+        <button value="rename">Rename list</button>
+        <button value="uncheck">Uncheck all items</button>
+        <button value="delete" class="danger">Delete list</button>
+        <button value="cancel">Close</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
