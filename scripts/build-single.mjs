@@ -5,8 +5,13 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 const html = read('index.html');
 const css = read('styles.css');
-const lib = read('lib.js').replace(/^export /gm, '');
-const app = read('app.js').replace(/^import[\s\S]*?from '\.\/lib\.js';\n/m, '');
+// Modules in dependency order; their import/export syntax is stripped so they share one scope.
+const MODULES = ['lib.js', 'format.js', 'receipts.js', 'insights.js', 'sample-data.js', 'receipts-ui.js', 'app.js'];
+const js = MODULES.map((f) => `// ---- ${f} ----\n${read(f)
+  .replace(/^import[\s\S]*?from '[^']+';\n/gm, '')
+  .replace(/^export /gm, '')}`).join('\n')
+  // Several modules define the same tiny `$` helper; keep only the first.
+  .replace(/(const \$ = \(id\) => document\.getElementById\(id\);\n)([\s\S]*)/, (m, first, rest) => first + rest.split(first).join(''));
 const body = html.slice(html.indexOf('<body>') + 6, html.indexOf('</body>'))
   .replace(/\s*<script src="app\.js"[^>]*><\/script>/, '');
 const icon = `data:image/svg+xml,${encodeURIComponent(read('icon.svg'))}`;
@@ -19,8 +24,7 @@ const out = `<title>Grocery List</title>
 ${css}</style>
 ${body.trim()}
 <script type="module">
-${lib}
-${app}</script>
+${js}</script>
 `;
 mkdirSync(new URL('../dist/', import.meta.url), { recursive: true });
 writeFileSync(new URL('../dist/grocery-list.html', import.meta.url), out);

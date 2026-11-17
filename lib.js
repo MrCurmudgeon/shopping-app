@@ -15,8 +15,8 @@ export const CATEGORIES = [
 ];
 
 const KEYWORDS = {
-  'Produce': ['apple', 'banana', 'avocado', 'lettuce', 'tomato', 'onion', 'garlic', 'potato', 'carrot', 'pepper', 'cucumber', 'spinach', 'lemon', 'lime', 'orange', 'grape', 'berry', 'berries', 'strawberr', 'blueberr', 'broccoli', 'mushroom', 'herb', 'basil', 'cilantro', 'parsley', 'celery', 'zucchini', 'kale', 'pear', 'peach', 'melon', 'fruit', 'veg', 'salad', 'ginger'],
-  'Bakery': ['bread', 'bagel', 'baguette', 'bun', 'roll', 'croissant', 'muffin', 'tortilla', 'pita', 'cake', 'loaf'],
+  'Produce': ['apple', 'banana', 'avocado', 'leek', 'squash', 'courgette', 'aubergine', 'sweetcorn', 'banana', 'avocado', 'lettuce', 'tomato', 'onion', 'garlic', 'potato', 'carrot', 'pepper', 'cucumber', 'spinach', 'lemon', 'lime', 'orange', 'grape', 'berry', 'berries', 'strawberr', 'blueberr', 'broccoli', 'mushroom', 'herb', 'basil', 'cilantro', 'parsley', 'celery', 'zucchini', 'kale', 'pear', 'peach', 'melon', 'fruit', 'veg', 'salad', 'ginger'],
+  'Bakery': ['bread', 'sourdough', 'brioche', 'naan', 'wrap', 'bagel', 'baguette', 'bun', 'roll', 'croissant', 'muffin', 'tortilla', 'pita', 'cake', 'loaf'],
   'Dairy & Eggs': ['milk', 'cheese', 'yogurt', 'yoghurt', 'butter', 'cream', 'egg', 'cheddar', 'mozzarella', 'parmesan', 'feta'],
   'Meat & Seafood': ['chicken', 'beef', 'pork', 'steak', 'bacon', 'sausage', 'ham', 'turkey', 'lamb', 'mince', 'fish', 'salmon', 'tuna', 'shrimp', 'prawn'],
   'Pantry': ['rice', 'pasta', 'noodle', 'flour', 'sugar', 'salt', 'oil', 'vinegar', 'sauce', 'beans', 'lentil', 'cereal', 'oat', 'honey', 'jam', 'peanut butter', 'spice', 'stock', 'broth', 'soup', 'canned', 'coffee', 'tea', 'ketchup', 'mustard', 'mayo'],

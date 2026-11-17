@@ -1,6 +1,8 @@
 import {
   CATEGORIES, guessCategory, parseItemInput, formatQty, itemTotal, listToText, groupByCategory,
 } from './lib.js';
+import { initReceipts } from './receipts-ui.js';
+import { money } from './format.js';
 
 const STORAGE_KEY = 'grocery-app-v1';
 const $ = (id) => document.getElementById(id);
@@ -17,6 +19,8 @@ function defaultState() {
     currentListId: id,
     lists: [{ id, name: 'Groceries', items: [] }],
     history: {}, // lowercased name -> { name, category, count }
+    receipts: [], // { id, date, store, total, items: [{ name, raw, qty, unit, price, category }] }
+    aliases: {}, // normalized receipt name -> the name you corrected it to
   };
 }
 
@@ -25,13 +29,22 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const s = JSON.parse(raw);
-      if (s && Array.isArray(s.lists) && s.lists.length) return s;
+      if (s && Array.isArray(s.lists) && s.lists.length) return withDefaults(s);
     }
   } catch { /* ignore, fall back to defaults */ }
   return defaultState();
 }
 
+function withDefaults(s) {
+  s.history ||= {};
+  s.receipts ||= [];
+  s.aliases ||= {};
+  if (!s.lists.some((l) => l.id === s.currentListId)) s.currentListId = s.lists[0].id;
+  return s;
+}
+
 let state = load();
+let receiptsUI = null;
 const ui = { filter: '', hideChecked: false, editingId: null };
 
 function save() {
@@ -95,7 +108,7 @@ function renderSummary(list) {
   const done = list.items.filter((i) => i.checked).length;
   const cost = list.items.reduce((sum, i) => sum + itemTotal(i), 0);
   const parts = [total ? `${done} of ${total} in cart` : 'No items yet'];
-  if (cost > 0) parts.push(`est. ${cost.toFixed(2)}`);
+  if (cost > 0) parts.push(`est. ${money(cost)}`);
   $('summary').textContent = parts.join(' · ');
   $('progressBar').style.width = total ? `${(done / total) * 100}%` : '0';
 }
@@ -146,7 +159,7 @@ function renderItem(it) {
   body.append(name);
   const metaParts = [];
   if (it.unit) metaParts.push(formatQty(it));
-  if (it.price) metaParts.push(`${itemTotal(it).toFixed(2)}`);
+  if (it.price) metaParts.push(money(itemTotal(it)));
   if (it.note) metaParts.push(it.note);
   if (metaParts.length) {
     const meta = document.createElement('div');
@@ -182,7 +195,60 @@ function render() {
   renderSuggestions();
   renderSummary(list);
   renderItems(list);
+  receiptsUI?.render();
 }
+
+// ---------- Views (tabs) ----------
+
+const VIEWS = { list: '', receipts: 'Receipts', insights: 'Insights' };
+
+function showView(name, { push = true } = {}) {
+  if (!(name in VIEWS)) name = 'list';
+  for (const v of Object.keys(VIEWS)) $(`view-${v}`).hidden = v !== name;
+  document.querySelectorAll('.tabbar a').forEach((a) => {
+    if (a.dataset.view === name) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  });
+  const isList = name === 'list';
+  $('listHeader').hidden = !isList;
+  $('summary').hidden = !isList;
+  $('progressWrap').hidden = !isList;
+  $('viewTitle').hidden = isList;
+  $('viewTitle').textContent = VIEWS[name];
+  const hash = isList ? '' : `#${name}`;
+  if (push && location.hash !== hash) history.pushState(null, '', hash || location.pathname + location.search);
+  window.scrollTo(0, 0);
+}
+
+document.querySelector('.tabbar').addEventListener('click', (e) => {
+  const a = e.target.closest('a[data-view]');
+  if (!a) return;
+  e.preventDefault();
+  showView(a.dataset.view);
+});
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-goto]');
+  if (b) showView(b.dataset.goto);
+});
+window.addEventListener('popstate', () => showView(location.hash.slice(1), { push: false }));
+
+// Labels styled as buttons (file pickers) should work from the keyboard too.
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('label.button[for]')) {
+    e.preventDefault();
+    $(e.target.htmlFor).click();
+  }
+});
+
+// Enter inside a dialog's text field means "save", never the first button (which may be Delete).
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+  const form = e.target.closest('dialog form');
+  if (!form) return;
+  e.preventDefault();
+  const primary = form.querySelector('button.primary');
+  if (primary && form.reportValidity()) form.requestSubmit(primary);
+});
 
 // ---------- Actions ----------
 
@@ -375,7 +441,10 @@ $('listDialog').addEventListener('close', () => {
     case 'delete': {
       const index = state.lists.indexOf(list);
       state.lists = state.lists.filter((l) => l.id !== list.id);
-      if (!state.lists.length) state = { ...defaultState(), history: state.history };
+      if (!state.lists.length) {
+        const fresh = defaultState();
+        state.lists = fresh.lists;
+      }
       state.currentListId = state.lists[0].id;
       save();
       render();
@@ -414,7 +483,7 @@ $('editDialog').addEventListener('close', () => {
   if (action === 'delete') { deleteItem(item.id); return; }
   if (action !== 'save') return;
   item.name = $('editName').value.trim() || item.name;
-  item.qty = Math.max(1, Number($('editQty').value) || 1);
+  item.qty = Math.max(0.01, Number($('editQty').value) || 1);
   item.unit = $('editUnit').value.trim();
   const price = parseFloat($('editPrice').value);
   item.price = Number.isFinite(price) && price > 0 ? price : null;
@@ -432,8 +501,47 @@ window.addEventListener('storage', (e) => {
 
 // ---------- Boot ----------
 
+/** Add predicted items to the current list, merging with what is already there. */
+function addToList(items) {
+  const list = currentList();
+  let added = 0;
+  for (const it of items) {
+    const existing = list.items.find((i) => i.name.toLowerCase() === it.name.toLowerCase() && !i.checked);
+    if (existing) continue;
+    list.items.push({
+      id: uid(),
+      name: it.name,
+      qty: it.qty || 1,
+      unit: it.unit || '',
+      category: it.category || guessCategory(it.name, categoryHistory()),
+      note: '',
+      price: it.price || null,
+      checked: false,
+      createdAt: Date.now(),
+    });
+    added += 1;
+  }
+  save();
+  render();
+  return added;
+}
+
+receiptsUI = initReceipts({
+  getState: () => state,
+  replaceState: (s) => { state = withDefaults(s); save(); render(); },
+  save,
+  toast,
+  uid,
+  categoryHistory,
+  remember,
+  addToList,
+  showView,
+  currentListNames: () => currentList().items.filter((i) => !i.checked).map((i) => i.name.toLowerCase()),
+});
+
 fillCategorySelect($('itemCategory'), '');
 render();
+showView(location.hash.slice(1), { push: false });
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});

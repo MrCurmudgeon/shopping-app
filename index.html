@@ -13,16 +13,18 @@
 </head>
 <body>
   <header class="app-header">
-    <div class="list-picker">
+    <h1 id="viewTitle" class="view-title" hidden></h1>
+    <div class="list-picker" id="listHeader">
       <select id="listSelect" aria-label="Current list"></select>
       <button id="newListBtn" class="icon-btn" title="New list" aria-label="New list">＋</button>
       <button id="listMenuBtn" class="icon-btn" title="List options" aria-label="List options">⋯</button>
     </div>
     <p id="summary" class="summary" aria-live="polite"></p>
-    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <div class="progress" id="progressWrap" aria-hidden="true"><div id="progressBar"></div></div>
   </header>
 
   <main>
+   <section id="view-list" class="view">
     <form id="addForm" class="add-form" autocomplete="off">
       <input id="itemName" list="suggestions" placeholder="Add an item, e.g. 2 avocados" aria-label="Item name" required>
       <datalist id="suggestions"></datalist>
@@ -43,14 +45,100 @@
       <button id="clearCheckedBtn">Clear checked</button>
       <button id="shareBtn">Share / copy list</button>
     </div>
+   </section>
+
+   <section id="view-receipts" class="view" hidden>
+    <div class="receipt-actions">
+      <label for="receiptFile" class="button primary big" role="button" tabindex="0">Scan a receipt photo</label>
+      <input type="file" id="receiptFile" accept="image/*" class="visually-hidden">
+      <div class="two">
+        <button id="pasteReceiptBtn">Paste receipt text</button>
+        <button id="manualReceiptBtn">Type it in</button>
+      </div>
+      <p class="hint">Photos are read on this phone and never uploaded. The first scan downloads the free text reader (a few MB).</p>
+    </div>
+    <div id="ocrStatus" class="ocr-status" role="status" hidden>
+      <span id="ocrText"></span>
+      <progress id="ocrProgress" max="1"></progress>
+    </div>
+    <h2 class="section-title">Saved receipts</h2>
+    <ul id="receiptList" class="receipt-list"></ul>
+    <p id="receiptsEmpty" class="empty small">No receipts yet. Scan one after your next shop, or try the sample data on the Insights tab.</p>
+    <h2 class="section-title">Backup</h2>
+    <p class="hint">Your lists and receipts are stored only on this device. Save a backup file now and then.</p>
+    <div class="two">
+      <button id="exportBtn">Save backup</button>
+      <label for="importFile" class="button" role="button" tabindex="0">Restore backup</label>
+      <input type="file" id="importFile" accept="application/json,.json" class="visually-hidden">
+    </div>
+   </section>
+
+   <section id="view-insights" class="view" hidden>
+    <div id="insightsEmpty" class="empty-card" hidden>
+      <h2>Insights need receipts</h2>
+      <p>Scan or paste a few receipts and this page will show where your money goes and predict next week's shop.</p>
+      <div class="two">
+        <button class="primary" data-goto="receipts">Add a receipt</button>
+        <button id="sampleBtn">Try with sample receipts</button>
+      </div>
+    </div>
+    <div id="insightsBody">
+      <p id="sampleNote" class="sample-note" hidden>
+        <span>Showing sample receipts.</span>
+        <button id="removeSampleBtn">Remove samples</button>
+      </p>
+      <section class="card predict">
+        <div class="card-head">
+          <h2>Next week's shop</h2>
+          <span id="predTotal" class="muted"></span>
+        </div>
+        <p id="predHint" class="hint"></p>
+        <ul id="predList" class="pred-list"></ul>
+        <button id="predAdd" class="primary wide">Add to list</button>
+      </section>
+      <div id="tiles" class="tiles"></div>
+      <section class="card">
+        <h2>Spending per week</h2>
+        <div id="weekChart"></div>
+      </section>
+      <section class="card">
+        <h2>By category <span class="muted">· last 8 weeks</span></h2>
+        <div id="catChart"></div>
+      </section>
+      <section class="card">
+        <h2>Most spent on <span class="muted">· last 8 weeks</span></h2>
+        <div class="table-wrap"><table id="topTable" class="data-table"></table></div>
+      </section>
+      <section class="card" id="priceCard">
+        <h2>Price changes</h2>
+        <p class="hint">Latest price compared with the time before.</p>
+        <ul id="priceList" class="price-list"></ul>
+      </section>
+    </div>
+   </section>
   </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <a href="#list" data-view="list" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+      List
+    </a>
+    <a href="#receipts" data-view="receipts">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h4"/></svg>
+      Receipts
+    </a>
+    <a href="#insights" data-view="insights">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      Insights
+    </a>
+  </nav>
 
   <dialog id="editDialog">
     <form method="dialog" id="editForm">
       <h2>Edit item</h2>
       <label>Name <input id="editName" required></label>
       <div class="row">
-        <label>Qty <input id="editQty" type="number" min="1" step="1"></label>
+        <label>Qty <input id="editQty" type="number" min="0" step="any" inputmode="decimal"></label>
         <label>Unit <input id="editUnit" placeholder="kg, pack…"></label>
       </div>
       <label>Price (each, optional) <input id="editPrice" type="number" min="0" step="0.01"></label>
@@ -85,6 +173,55 @@
         <span class="spacer"></span>
         <button value="cancel" formnovalidate>Cancel</button>
         <button value="save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="receiptDialog" class="sheet">
+    <form method="dialog" id="receiptForm">
+      <div class="sheet-head">
+        <h2 id="receiptTitle" tabindex="-1" autofocus>Check receipt</h2>
+        <button value="cancel" formnovalidate class="icon-btn plain" aria-label="Close">×</button>
+      </div>
+      <p id="receiptHint" class="hint"></p>
+      <details id="photoDetails" hidden>
+        <summary>Show photo</summary>
+        <img id="receiptPhoto" alt="Your receipt photo">
+      </details>
+      <div class="row">
+        <label>Store <input id="rStore" placeholder="Store name"></label>
+        <label>Date <input id="rDate" type="date" required></label>
+      </div>
+      <h3 class="r-heading"><span id="rCount">0</span> items</h3>
+      <div id="rItems" class="r-items"></div>
+      <button type="button" id="rAddLine" class="wide">Add a line</button>
+      <div class="r-totals">
+        <span>Items total <strong id="rSum"></strong></span>
+        <label class="inline">Receipt total <input id="rTotal" type="number" min="0" step="0.01" inputmode="decimal"></label>
+      </div>
+      <p id="rMismatch" class="warn" hidden></p>
+      <details id="rawDetails" hidden>
+        <summary>Show text the scan read</summary>
+        <pre id="rRawText"></pre>
+      </details>
+      <div class="dialog-actions">
+        <button value="delete" class="danger" id="rDelete" formnovalidate>Delete</button>
+        <span class="spacer"></span>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save" class="primary">Save receipt</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="pasteDialog">
+    <form method="dialog">
+      <h2>Paste receipt text</h2>
+      <p class="hint">Copy the text from an emailed or online receipt and paste it here.</p>
+      <textarea id="pasteText" rows="10" aria-label="Receipt text"></textarea>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="read" class="primary">Read receipt</button>
       </div>
     </form>
   </dialog>
