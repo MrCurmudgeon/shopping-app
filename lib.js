@@ -132,3 +132,23 @@ export function groupByCategory(items) {
   }
   return groups;
 }
+
+/**
+ * Fresh copies of list items for a new list or a template: new ids, all
+ * unticked, original order kept.
+ */
+export function copyItems(items, makeId, now = Date.now()) {
+  return [...items]
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+    .map((it, i) => ({
+      id: makeId(),
+      name: it.name,
+      qty: it.qty || 1,
+      unit: it.unit || '',
+      category: it.category || 'Other',
+      note: it.note || '',
+      price: it.price ?? null,
+      checked: false,
+      createdAt: now + i,
+    }));
+}

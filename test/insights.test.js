@@ -67,3 +67,11 @@ test('priceChanges and topItems', () => {
   assert.equal(pc[0].latest, 0.9);
   assert.equal(topItems(receipts, today, 56)[0].name, 'Cake');
 });
+
+test('planningWeekStart plans ahead from Friday', async () => {
+  const { planningWeekStart } = await import('../insights.js');
+  assert.equal(planningWeekStart('2026-11-17'), '2026-11-16'); // Tuesday -> this Monday
+  assert.equal(planningWeekStart('2026-11-19'), '2026-11-16'); // Thursday -> this Monday
+  assert.equal(planningWeekStart('2026-11-20'), '2026-11-23'); // Friday -> next Monday
+  assert.equal(planningWeekStart('2026-11-22'), '2026-11-23'); // Sunday -> next Monday
+});
