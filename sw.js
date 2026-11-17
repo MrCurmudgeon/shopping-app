@@ -1,12 +1,20 @@
-// Offline support: cache the app shell, serve cache-first, refresh in background.
-const CACHE = 'grocery-v3';
+// Offline support.
+// Online: always fetch the latest files (bypassing the browser's HTTP cache,
+// which GitHub Pages lets keep files for 10 minutes) and save a copy.
+// Offline or very slow network: serve the saved copy.
+const CACHE = 'grocery-v4';
 const ASSETS = [
   './', 'index.html', 'styles.css', 'app.js', 'lib.js', 'format.js', 'receipts.js', 'insights.js',
   'receipts-ui.js', 'sample-data.js', 'manifest.webmanifest', 'icon.svg',
 ];
+const NETWORK_TIMEOUT_MS = 4000;
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' }))))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -18,16 +26,23 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
-  e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const network = fetch(e.request)
-        .then((res) => {
-          if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
-          return res;
-        })
-        .catch(() => cached);
+  const req = e.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  e.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    const network = fetch(req, { cache: 'no-cache' }).then((res) => {
+      if (res.ok) cache.put(req, res.clone());
+      return res;
+    });
+    try {
+      // Prefer the network, but don't leave the user staring at a blank screen on a bad connection.
+      return await Promise.race([
+        network,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NETWORK_TIMEOUT_MS)),
+      ]);
+    } catch {
+      const cached = await cache.match(req, { ignoreSearch: true });
       return cached || network;
-    }),
-  );
+    }
+  })());
 });
