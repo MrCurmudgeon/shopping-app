@@ -16,7 +16,8 @@ const body = html.slice(html.indexOf('<body>') + 6, html.indexOf('</body>'))
   .replace(/\s*<script src="app\.js"[^>]*><\/script>/, '');
 const icon = `data:image/svg+xml,${encodeURIComponent(read('icon.svg'))}`;
 
-const out = `<title>Grocery List</title>
+const out = `<meta charset="utf-8">
+<title>Grocery List</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#2f7d4f">
 <link rel="icon" href="${icon}">

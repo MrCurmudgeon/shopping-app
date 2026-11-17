@@ -1,8 +1,9 @@
 import {
-  CATEGORIES, guessCategory, parseItemInput, formatQty, itemTotal, listToText, groupByCategory,
+  CATEGORIES, guessCategory, parseItemInput, formatQty, itemTotal, listToText, groupByCategory, copyItems,
 } from './lib.js';
+import { predictNextShop, planningWeekStart } from './insights.js';
 import { initReceipts } from './receipts-ui.js';
-import { money } from './format.js';
+import { money, shortDate, todayStr } from './format.js';
 
 const STORAGE_KEY = 'grocery-app-v1';
 const $ = (id) => document.getElementById(id);
@@ -82,12 +83,30 @@ function fillCategorySelect(select, selected) {
   select.value = selected ?? '';
 }
 
+function templates() {
+  return state.lists.filter((l) => l.template);
+}
+
 function renderListPicker() {
   const sel = $('listSelect');
   sel.innerHTML = '';
-  for (const l of state.lists) {
+  const lists = state.lists.filter((l) => !l.template);
+  const tpls = templates();
+  const groupOrSelf = (label) => {
+    if (!tpls.length) return sel;
+    const g = document.createElement('optgroup');
+    g.label = label;
+    sel.append(g);
+    return g;
+  };
+  const listParent = groupOrSelf('Lists');
+  for (const l of lists) {
     const left = l.items.filter((i) => !i.checked).length;
-    sel.append(new Option(`${l.name}${left ? ` (${left})` : ''}`, l.id));
+    listParent.append(new Option(`${l.name}${left ? ` (${left})` : ''}`, l.id));
+  }
+  if (tpls.length) {
+    const tplParent = groupOrSelf('Templates');
+    for (const t of tpls) tplParent.append(new Option(`${t.name} · template`, t.id));
   }
   sel.value = currentList().id;
 }
@@ -104,6 +123,11 @@ function renderSuggestions() {
 }
 
 function renderSummary(list) {
+  if (list.template) {
+    $('summary').textContent = `Template · ${list.items.length} item${list.items.length === 1 ? '' : 's'}`;
+    $('progressBar').style.width = '0';
+    return;
+  }
   const total = list.items.length;
   const done = list.items.filter((i) => i.checked).length;
   const cost = list.items.reduce((sum, i) => sum + itemTotal(i), 0);
@@ -111,6 +135,25 @@ function renderSummary(list) {
   if (cost > 0) parts.push(`est. ${money(cost)}`);
   $('summary').textContent = parts.join(' · ');
   $('progressBar').style.width = total ? `${(done / total) * 100}%` : '0';
+}
+
+function renderTemplateBits(list) {
+  const isTpl = !!list.template;
+  $('view-list').classList.toggle('is-template', isTpl);
+  $('templateBanner').hidden = !isTpl;
+  $('listFooter').hidden = isTpl;
+  $('hideCheckedLabel').hidden = isTpl;
+  // Offer the next week once this one is done (or empty).
+  const tpl = templateFor(list);
+  const done = list.items.length === 0 || list.items.every((i) => i.checked);
+  $('newWeekBtn').hidden = isTpl || !tpl || !done;
+  if (tpl) $('newWeekBtn').textContent = `Start next week from "${tpl.name}"`;
+}
+
+/** The template a list came from, or the first template. */
+function templateFor(list) {
+  const tpls = templates();
+  return tpls.find((t) => t.id === list.fromTemplate) || tpls[0] || null;
 }
 
 function renderItems(list) {
@@ -131,7 +174,7 @@ function renderItems(list) {
     const section = document.createElement('div');
     section.className = 'category';
     const h = document.createElement('h3');
-    h.textContent = `${cat} · ${items.filter((i) => i.checked).length}/${items.length}`;
+    h.textContent = list.template ? `${cat} · ${items.length}` : `${cat} · ${items.filter((i) => i.checked).length}/${items.length}`;
     const ul = document.createElement('ul');
     for (const it of items) ul.append(renderItem(it));
     section.append(h, ul);
@@ -194,6 +237,7 @@ function render() {
   renderListPicker();
   renderSuggestions();
   renderSummary(list);
+  renderTemplateBits(list);
   renderItems(list);
   receiptsUI?.render();
 }
@@ -400,34 +444,176 @@ $('listSelect').addEventListener('change', (e) => {
   render();
 });
 
-// Name dialog, used for both "new list" and "rename list".
-let nameMode = 'new';
-function openNameDialog(mode) {
+// ---------- New list / rename / template dialog ----------
+
+let nameMode = 'new'; // 'new' | 'rename' | 'template' | 'duplicate'
+let nameTouched = false;
+
+function weekName() {
+  return `Week of ${shortDate(planningWeekStart(todayStr()))}`;
+}
+
+/** Items Insights expects you to need that aren't already in `items`. */
+function predictedExtras(items) {
+  const have = new Set(items.map((i) => i.name.toLowerCase()));
+  return predictNextShop(state.receipts || [], todayStr(), 7)
+    .filter((p) => p.confidence >= 0.55 && !have.has(p.name.toLowerCase()))
+    .map((p) => ({
+      name: p.name,
+      qty: p.qty,
+      unit: p.unit,
+      category: p.category,
+      price: p.estCost ? +(p.estCost / (p.unit ? 1 : p.qty)).toFixed(2) : null,
+      createdAt: Number.MAX_SAFE_INTEGER, // after the template's own items
+    }));
+}
+
+function defaultNameFor(source) {
+  if (source.startsWith('tpl:')) return weekName();
+  if (source.startsWith('copy:')) {
+    const l = state.lists.find((x) => x.id === source.slice(5));
+    return l ? `${l.name} (copy)` : 'New list';
+  }
+  return '';
+}
+
+function updateNameDialog() {
+  const source = $('sourceSelect').value;
+  if (!nameTouched) $('nameInput').value = defaultNameFor(source);
+  const tpl = source.startsWith('tpl:') ? state.lists.find((l) => l.id === source.slice(4)) : null;
+  const extras = tpl ? predictedExtras(tpl.items) : [];
+  $('predictField').hidden = !extras.length;
+  $('predictCount').textContent = extras.length ? `(${extras.length}: ${extras.slice(0, 3).map((e) => e.name).join(', ')}${extras.length > 3 ? '…' : ''})` : '';
+}
+
+function openNameDialog(mode, { source } = {}) {
   nameMode = mode;
-  $('nameTitle').textContent = mode === 'new' ? 'New list' : 'Rename list';
-  $('nameInput').value = mode === 'new' ? '' : currentList().name;
-  $('nameInput').placeholder = 'e.g. Weekly shop, BBQ party';
+  nameTouched = false;
+  const list = currentList();
+  $('sourceField').hidden = mode !== 'new';
+  $('predictField').hidden = true;
+  $('nameHint').hidden = mode !== 'template';
+  $('nameInput').placeholder = mode === 'template' ? 'e.g. Weekly staples' : 'e.g. Weekly shop, BBQ party';
+
+  if (mode === 'new') {
+    $('nameTitle').textContent = 'New list';
+    const sel = $('sourceSelect');
+    sel.innerHTML = '';
+    sel.append(new Option('Blank list', ''));
+    for (const t of templates()) sel.append(new Option(`Template: ${t.name}`, `tpl:${t.id}`));
+    for (const l of state.lists.filter((x) => !x.template && x.items.length)) {
+      sel.append(new Option(`Copy of ${l.name}`, `copy:${l.id}`));
+    }
+    sel.value = source ?? (templates()[0] ? `tpl:${templates()[0].id}` : '');
+    updateNameDialog();
+  } else if (mode === 'duplicate') {
+    $('nameTitle').textContent = list.template ? 'Duplicate template' : 'Duplicate list';
+    $('nameInput').value = `${list.name} (copy)`;
+  } else if (mode === 'rename') {
+    $('nameTitle').textContent = list.template ? 'Rename template' : 'Rename list';
+    $('nameInput').value = list.name;
+  } else {
+    $('nameTitle').textContent = 'Save as template';
+    $('nameInput').value = templates().length ? `${list.name} template` : 'Weekly staples';
+    $('nameHint').textContent = `Saves the ${list.items.length} items on "${list.name}" (unticked) as a template. Remove any one-off items from it afterwards.`;
+  }
   $('nameDialog').showModal();
   $('nameInput').select();
+}
+
+$('sourceSelect').addEventListener('change', updateNameDialog);
+$('nameInput').addEventListener('input', () => { nameTouched = true; });
+
+function addList(list, select = true) {
+  state.lists.push(list);
+  if (select) state.currentListId = list.id;
+  return list;
 }
 
 $('nameDialog').addEventListener('close', () => {
   const name = $('nameInput').value.trim();
   if ($('nameDialog').returnValue !== 'save' || !name) return;
-  if (nameMode === 'new') {
-    const id = uid();
-    state.lists.push({ id, name, items: [] });
-    state.currentListId = id;
+  const list = currentList();
+
+  if (nameMode === 'rename') {
+    list.name = name;
+  } else if (nameMode === 'duplicate') {
+    // A copy of a template is a template; a copy of a list is a list from the same template.
+    addList({
+      id: uid(),
+      name,
+      items: copyItems(list.items, uid),
+      ...(list.template ? { template: true } : list.fromTemplate ? { fromTemplate: list.fromTemplate } : {}),
+    });
+    save();
+    render();
+    toast(`Created "${name}"`);
+    return;
+  } else if (nameMode === 'template') {
+    addList({ id: uid(), name, template: true, items: copyItems(list.items, uid) }, false);
+    list.fromTemplate = state.lists[state.lists.length - 1].id;
+    save();
+    render();
+    toast(`Saved template "${name}"`);
+    return;
   } else {
-    currentList().name = name;
+    const source = $('sourceSelect').value;
+    let items = [];
+    let fromTemplate;
+    let extrasAdded = 0;
+    if (source.startsWith('tpl:') || source.startsWith('copy:')) {
+      const src = state.lists.find((l) => l.id === source.slice(source.indexOf(':') + 1));
+      if (src) {
+        let pool = src.items;
+        if (src.template) {
+          fromTemplate = src.id;
+          if (!$('predictField').hidden && $('predictCheck').checked) {
+            const extras = predictedExtras(src.items);
+            extrasAdded = extras.length;
+            pool = [...pool, ...extras];
+          }
+        } else {
+          fromTemplate = src.fromTemplate;
+        }
+        items = copyItems(pool, uid);
+      }
+    }
+    addList({ id: uid(), name, items, ...(fromTemplate ? { fromTemplate } : {}) });
+    save();
+    render();
+    showView('list');
+    if (items.length) toast(`Created "${name}" with ${items.length} items${extrasAdded ? ` (${extrasAdded} from Insights)` : ''}`);
+    return;
   }
   save();
   render();
 });
 
+function startNewWeek(templateId) {
+  openNameDialog('new', { source: `tpl:${templateId}` });
+}
+
+$('useTemplateBtn').addEventListener('click', () => startNewWeek(currentList().id));
+$('newWeekBtn').addEventListener('click', () => {
+  const tpl = templateFor(currentList());
+  if (tpl) startNewWeek(tpl.id);
+});
+
 $('newListBtn').addEventListener('click', () => openNameDialog('new'));
 
-$('listMenuBtn').addEventListener('click', () => $('listDialog').showModal());
+$('listMenuBtn').addEventListener('click', () => {
+  const list = currentList();
+  const isTpl = !!list.template;
+  const tpl = templateFor(list);
+  $('listDialogTitle').textContent = isTpl ? `Template: ${list.name}` : list.name;
+  $('optNewWeek').hidden = !isTpl;
+  $('optSaveTemplate').hidden = isTpl;
+  $('optUpdateTemplate').hidden = isTpl || !tpl;
+  if (tpl) $('optUpdateTemplate').textContent = `Update "${tpl.name}" from this list`;
+  $('optUncheck').hidden = isTpl;
+  $('optDelete').textContent = isTpl ? 'Delete template' : 'Delete list';
+  $('listDialog').showModal();
+});
 
 $('listDialog').addEventListener('close', () => {
   const list = currentList();
@@ -435,6 +621,30 @@ $('listDialog').addEventListener('close', () => {
     case 'rename':
       openNameDialog('rename');
       return;
+    case 'saveTemplate':
+      openNameDialog('template');
+      return;
+    case 'newWeek':
+      startNewWeek(list.id);
+      return;
+    case 'duplicate':
+      openNameDialog('duplicate');
+      return;
+    case 'updateTemplate': {
+      const tpl = templateFor(list);
+      if (!tpl) return;
+      const before = tpl.items;
+      tpl.items = copyItems(list.items, uid);
+      list.fromTemplate = tpl.id;
+      save();
+      render();
+      toast(`Updated "${tpl.name}" · ${tpl.items.length} items`, () => {
+        tpl.items = before;
+        save();
+        render();
+      });
+      return;
+    }
     case 'uncheck':
       list.items.forEach((i) => { i.checked = false; });
       break;
@@ -445,7 +655,7 @@ $('listDialog').addEventListener('close', () => {
         const fresh = defaultState();
         state.lists = fresh.lists;
       }
-      state.currentListId = state.lists[0].id;
+      state.currentListId = (state.lists.find((l) => !l.template) || state.lists[0]).id;
       save();
       render();
       toast(`Deleted "${list.name}"`, () => {

@@ -25,6 +25,11 @@
 
   <main>
    <section id="view-list" class="view">
+    <div id="templateBanner" class="template-banner" hidden>
+      <p><strong>This is a template.</strong> Changes here apply to future weeks, not to lists you've already made.</p>
+      <button id="useTemplateBtn" class="primary">Start a new week from it</button>
+    </div>
+    <button id="newWeekBtn" class="new-week" hidden></button>
     <form id="addForm" class="add-form" autocomplete="off">
       <input id="itemName" list="suggestions" placeholder="Add an item, e.g. 2 avocados" aria-label="Item name" required>
       <datalist id="suggestions"></datalist>
@@ -34,14 +39,14 @@
 
     <div class="toolbar">
       <input id="searchInput" type="search" placeholder="Filter items" aria-label="Filter items">
-      <label class="toggle"><input type="checkbox" id="hideChecked"> Hide checked</label>
+      <label class="toggle" id="hideCheckedLabel"><input type="checkbox" id="hideChecked"> Hide checked</label>
     </div>
 
     <section id="listContainer" aria-label="Items"></section>
 
     <p id="emptyState" class="empty" hidden>Your list is empty. Add something above.</p>
 
-    <div class="footer-actions">
+    <div class="footer-actions" id="listFooter">
       <button id="clearCheckedBtn">Clear checked</button>
       <button id="shareBtn">Share / copy list</button>
     </div>
@@ -155,11 +160,15 @@
 
   <dialog id="listDialog">
     <form method="dialog">
-      <h2>List options</h2>
+      <h2 id="listDialogTitle">List options</h2>
       <div class="dialog-actions column">
-        <button value="rename">Rename list</button>
-        <button value="uncheck">Uncheck all items</button>
-        <button value="delete" class="danger">Delete list</button>
+        <button value="newWeek" id="optNewWeek" class="primary">Start a new week from this template</button>
+        <button value="saveTemplate" id="optSaveTemplate">Save as template</button>
+        <button value="updateTemplate" id="optUpdateTemplate">Update template</button>
+        <button value="duplicate">Duplicate</button>
+        <button value="rename">Rename</button>
+        <button value="uncheck" id="optUncheck">Uncheck all items</button>
+        <button value="delete" class="danger" id="optDelete">Delete list</button>
         <button value="cancel">Close</button>
       </div>
     </form>
@@ -168,7 +177,13 @@
   <dialog id="nameDialog">
     <form method="dialog" id="nameForm">
       <h2 id="nameTitle">New list</h2>
-      <label>List name <input id="nameInput" required maxlength="60"></label>
+      <label id="sourceField" hidden>Start from <select id="sourceSelect"></select></label>
+      <label>Name <input id="nameInput" required maxlength="60"></label>
+      <label id="predictField" class="check" hidden>
+        <input type="checkbox" id="predictCheck" checked>
+        <span>Also add items Insights expects you'll need <span id="predictCount" class="muted"></span></span>
+      </label>
+      <p id="nameHint" class="hint" hidden></p>
       <div class="dialog-actions">
         <span class="spacer"></span>
         <button value="cancel" formnovalidate>Cancel</button>

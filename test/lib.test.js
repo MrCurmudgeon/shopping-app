@@ -66,3 +66,20 @@ test('guessCategory prefers the last noun', () => {
   assert.equal(guessCategory('Ice cream'), 'Frozen');
   assert.equal(guessCategory('Dish soap'), 'Household');
 });
+
+test('copyItems makes unticked copies in original order', async () => {
+  const { copyItems } = await import('../lib.js');
+  let n = 0;
+  const src = [
+    { id: 'b', name: 'Bread', qty: 1, category: 'Bakery', checked: true, createdAt: 20, price: 2.5 },
+    { id: 'a', name: 'Milk', qty: 2, category: 'Dairy & Eggs', checked: false, createdAt: 10, note: 'semi' },
+  ];
+  const out = copyItems(src, () => `id${++n}`, 1000);
+  assert.deepEqual(out.map((i) => [i.id, i.name, i.qty, i.checked, i.createdAt]), [
+    ['id1', 'Milk', 2, false, 1000],
+    ['id2', 'Bread', 1, false, 1001],
+  ]);
+  assert.equal(out[0].note, 'semi');
+  assert.equal(out[1].price, 2.5);
+  assert.equal(src[0].checked, true, 'source untouched');
+});

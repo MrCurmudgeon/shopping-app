@@ -10,7 +10,8 @@ plain HTML/CSS/JS with no build step and no dependencies, and you can install it
 - **Check off while you shop**, with a progress bar and a "Hide checked" toggle.
 - **Quantity +/- buttons**. Adding an item that is already on the list increases its quantity.
 - **Edit items**: name, quantity, unit, category, note, and an optional price for a running estimate.
-- **Multiple lists** (weekly shop, party, hardware store…) that you can rename, reset or delete.
+- **Multiple lists** (weekly shop, party, hardware store…) that you can rename, duplicate, reset or delete.
+- **Weekly templates**: save a list of your staples as a template (⋯ → Save as template), then start each week from it, with every item unticked and the list named "Week of …". You can also add the items Insights expects you'll need. Edit the template like any list, or update it from a good week's list. When a week's list is all ticked off, a button offers to start the next one.
 - **Suggestions** from items you've bought before.
 - **Clear checked** with undo, plus **Share / copy** the list as text.
 - Works offline (service worker). Data is saved in the browser (`localStorage`) and stays in sync across tabs.

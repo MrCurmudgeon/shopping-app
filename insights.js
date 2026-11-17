@@ -189,3 +189,13 @@ export function predictionReason(p) {
   const last = p.since === 0 ? 'bought today' : p.since === 1 ? 'last bought yesterday' : `last bought ${p.since} days ago`;
   return `Usually ${every} · ${last}`;
 }
+
+/**
+ * The Monday a new weekly list is for: this week's Monday until Thursday,
+ * next week's from Friday on (when people usually plan ahead).
+ */
+export function planningWeekStart(today) {
+  const monday = toDay(weekStart(today));
+  const dow = toDay(today) - monday; // Monday = 0
+  return fromDay(dow >= 4 ? monday + 7 : monday);
+}
