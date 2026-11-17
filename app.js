@@ -2,6 +2,7 @@ import {
   CATEGORIES, guessCategory, parseItemInput, formatQty, itemTotal, listToText, groupByCategory, copyItems,
 } from './lib.js';
 import { predictNextShop, planningWeekStart } from './insights.js';
+import { categoryIcon } from './category-icons.js';
 import { initReceipts } from './receipts-ui.js';
 import { money, shortDate, todayStr } from './format.js';
 
@@ -198,7 +199,10 @@ function renderItems(list) {
     const count = document.createElement('span');
     count.className = 'count';
     count.textContent = list.template ? String(items.length) : `${items.filter((i) => i.checked).length}/${items.length}`;
-    h.append(cat, count);
+    const tile = document.createElement('span');
+    tile.className = 'cat-tile';
+    tile.append(categoryIcon(cat));
+    h.append(tile, cat, count);
     const ul = document.createElement('ul');
     for (const it of items) ul.append(renderItem(it));
     section.append(h, ul);

@@ -6,7 +6,7 @@ const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 const html = read('index.html');
 const css = read('styles.css');
 // Modules in dependency order; their import/export syntax is stripped so they share one scope.
-const MODULES = ['lib.js', 'format.js', 'receipts.js', 'insights.js', 'sample-data.js', 'receipts-ui.js', 'app.js'];
+const MODULES = ['lib.js', 'format.js', 'category-icons.js', 'receipts.js', 'insights.js', 'sample-data.js', 'receipts-ui.js', 'app.js'];
 const js = MODULES.map((f) => `// ---- ${f} ----\n${read(f)
   .replace(/^import[\s\S]*?from '[^']+';\n/gm, '')
   .replace(/^export /gm, '')}`).join('\n')
