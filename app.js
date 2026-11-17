@@ -46,7 +46,7 @@ function withDefaults(s) {
 
 let state = load();
 let receiptsUI = null;
-const ui = { filter: '', hideChecked: false, editingId: null };
+const ui = { filter: '', hideChecked: false, editingId: null, justToggled: null };
 
 function save() {
   try {
@@ -122,19 +122,39 @@ function renderSuggestions() {
   for (const h of entries) dl.append(new Option(h.name));
 }
 
+function greeting() {
+  const h = new Date().getHours();
+  return h < 5 ? 'Up late?' : h < 12 ? 'Good morning!' : h < 18 ? 'Good afternoon!' : 'Good evening!';
+}
+
+const RING_C = 2 * Math.PI * 24;
+
+function renderRing(done, total) {
+  const ring = $('progressWrap');
+  const frac = total ? done / total : 0;
+  $('ringFill').setAttribute('stroke-dashoffset', String(RING_C * (1 - frac)));
+  $('ringText').textContent = total ? `${done}/${total}` : '–';
+  ring.classList.toggle('done', total > 0 && done === total);
+  ring.setAttribute('aria-label', total ? `${done} of ${total} items in the cart` : 'No items yet');
+}
+
 function renderSummary(list) {
+  $('greeting').textContent = greeting();
+  $('progressWrap').hidden = !!list.template;
   if (list.template) {
     $('summary').textContent = `Template · ${list.items.length} item${list.items.length === 1 ? '' : 's'}`;
-    $('progressBar').style.width = '0';
     return;
   }
   const total = list.items.length;
   const done = list.items.filter((i) => i.checked).length;
   const cost = list.items.reduce((sum, i) => sum + itemTotal(i), 0);
-  const parts = [total ? `${done} of ${total} in cart` : 'No items yet'];
-  if (cost > 0) parts.push(`est. ${money(cost)}`);
+  const left = total - done;
+  const parts = [!total ? 'Nothing on the list yet'
+    : left === 0 ? 'All done – nice shop!'
+      : `${left} thing${left === 1 ? '' : 's'} to grab`];
+  if (cost > 0 && left > 0) parts.push(`about ${money(cost)}`);
   $('summary').textContent = parts.join(' · ');
-  $('progressBar').style.width = total ? `${(done / total) * 100}%` : '0';
+  renderRing(done, total);
 }
 
 function renderTemplateBits(list) {
@@ -173,8 +193,12 @@ function renderItems(list) {
   for (const [cat, items] of groupByCategory(visible)) {
     const section = document.createElement('div');
     section.className = 'category';
+    section.dataset.cat = cat;
     const h = document.createElement('h3');
-    h.textContent = list.template ? `${cat} · ${items.length}` : `${cat} · ${items.filter((i) => i.checked).length}/${items.length}`;
+    const count = document.createElement('span');
+    count.className = 'count';
+    count.textContent = list.template ? String(items.length) : `${items.filter((i) => i.checked).length}/${items.length}`;
+    h.append(cat, count);
     const ul = document.createElement('ul');
     for (const it of items) ul.append(renderItem(it));
     section.append(h, ul);
@@ -184,7 +208,7 @@ function renderItems(list) {
 
 function renderItem(it) {
   const li = document.createElement('li');
-  li.className = `item${it.checked ? ' checked' : ''}`;
+  li.className = `item${it.checked ? ' checked' : ''}${ui.justToggled === it.id ? ' pop' : ''}`;
   li.dataset.id = it.id;
 
   const cb = document.createElement('input');
@@ -239,6 +263,7 @@ function render() {
   renderSummary(list);
   renderTemplateBits(list);
   renderItems(list);
+  ui.justToggled = null;
   receiptsUI?.render();
 }
 
@@ -255,8 +280,7 @@ function showView(name, { push = true } = {}) {
   });
   const isList = name === 'list';
   $('listHeader').hidden = !isList;
-  $('summary').hidden = !isList;
-  $('progressWrap').hidden = !isList;
+  $('listButtons').hidden = !isList;
   $('viewTitle').hidden = isList;
   $('viewTitle').textContent = VIEWS[name];
   const hash = isList ? '' : `#${name}`;
@@ -350,6 +374,62 @@ function undo() {
   render();
 }
 
+// ---------- Celebration ----------
+
+const CONFETTI_COLOURS = ['--c-produce', '--c-dairy', '--c-snacks', '--c-drinks', '--c-care', '--c-bakery', '--accent'];
+
+function celebrate() {
+  const ring = $('progressWrap');
+  ring.classList.remove('cheer');
+  void ring.offsetWidth; // restart the animation
+  ring.classList.add('cheer');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const css = getComputedStyle(document.documentElement);
+  const colours = CONFETTI_COLOURS.map((v) => css.getPropertyValue(v).trim()).filter(Boolean);
+  const canvas = document.createElement('canvas');
+  canvas.className = 'confetti';
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = innerWidth * dpr;
+  canvas.height = innerHeight * dpr;
+  document.body.append(canvas);
+  const c = canvas.getContext('2d');
+  c.scale(dpr, dpr);
+  const pieces = Array.from({ length: 110 }, () => ({
+    x: innerWidth / 2 + (Math.random() - 0.5) * 80,
+    y: innerHeight * 0.25,
+    vx: (Math.random() - 0.5) * 9,
+    vy: -Math.random() * 9 - 3,
+    w: 6 + Math.random() * 6,
+    h: 8 + Math.random() * 8,
+    r: Math.random() * Math.PI,
+    vr: (Math.random() - 0.5) * 0.3,
+    colour: colours[Math.floor(Math.random() * colours.length)],
+  }));
+  const start = performance.now();
+  (function frame(now) {
+    const t = now - start;
+    c.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of pieces) {
+      p.vy += 0.28;
+      p.vx *= 0.99;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.r += p.vr;
+      c.save();
+      c.globalAlpha = Math.max(0, 1 - t / 1800);
+      c.translate(p.x, p.y);
+      c.rotate(p.r);
+      c.fillStyle = p.colour;
+      c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      c.restore();
+    }
+    if (t < 1800) requestAnimationFrame(frame);
+    else canvas.remove();
+  })(start);
+  toast('All done – nice shop!');
+}
+
 // ---------- Toast ----------
 
 let toastTimer;
@@ -385,9 +465,18 @@ $('listContainer').addEventListener('click', (e) => {
   const item = findItem(li.dataset.id);
   if (!item) return;
   switch (target.dataset.action) {
-    case 'toggle':
+    case 'toggle': {
       item.checked = target.checked;
+      ui.justToggled = item.id;
+      const list = currentList();
+      if (item.checked && list.items.length > 1 && list.items.every((i) => i.checked)) {
+        save();
+        render();
+        celebrate();
+        return;
+      }
       break;
+    }
     case 'inc':
       item.qty += 1;
       break;

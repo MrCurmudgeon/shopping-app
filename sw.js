@@ -2,11 +2,11 @@
 // Online: always fetch the latest files (bypassing the browser's HTTP cache,
 // which GitHub Pages lets keep files for 10 minutes) and save a copy.
 // Offline or very slow network: serve the saved copy.
-const CACHE = 'grocery-v7';
+const CACHE = 'grocery-v8';
 const ASSETS = [
   './', 'index.html', 'styles.css', 'app.js', 'lib.js', 'format.js', 'receipts.js', 'insights.js',
   'receipts-ui.js', 'sample-data.js', 'manifest.webmanifest',
-  'icons/icon.svg', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
+  'icons/icon.svg', 'icons/avatar.svg', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
 ];
 const NETWORK_TIMEOUT_MS = 4000;
 

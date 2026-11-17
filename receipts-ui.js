@@ -410,7 +410,7 @@ export function initReceipts(ctx) {
   function categoryBars(rows) {
     const max = Math.max(...rows.map((r) => r.total), 1);
     const sum = rows.reduce((s, r) => s + r.total, 0);
-    return el('ul', { class: 'hbars' }, rows.map((r) => el('li', {},
+    return el('ul', { class: 'hbars' }, rows.map((r) => el('li', { dataset: { cat: r.category } },
       el('span', { class: 'hb-label' }, r.category),
       el('span', { class: 'hb-track' }, el('span', { class: 'hb-fill', style: `width:${(r.total / max) * 100}%` })),
       el('span', { class: 'hb-value' }, money(r.total), el('small', {}, ` ${Math.round((r.total / sum) * 100)}%`)))));
