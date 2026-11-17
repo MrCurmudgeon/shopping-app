@@ -14,7 +14,7 @@ const js = MODULES.map((f) => `// ---- ${f} ----\n${read(f)
   .replace(/(const \$ = \(id\) => document\.getElementById\(id\);\n)([\s\S]*)/, (m, first, rest) => first + rest.split(first).join(''));
 const body = html.slice(html.indexOf('<body>') + 6, html.indexOf('</body>'))
   .replace(/\s*<script src="app\.js"[^>]*><\/script>/, '');
-const icon = `data:image/svg+xml,${encodeURIComponent(read('icon.svg'))}`;
+const icon = `data:image/svg+xml,${encodeURIComponent(read('icons/icon.svg'))}`;
 
 const out = `<meta charset="utf-8">
 <title>Grocery List</title>
