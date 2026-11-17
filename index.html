@@ -77,6 +77,18 @@
     </form>
   </dialog>
 
+  <dialog id="nameDialog">
+    <form method="dialog" id="nameForm">
+      <h2 id="nameTitle">New list</h2>
+      <label>List name <input id="nameInput" required maxlength="60"></label>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
   <div id="toast" class="toast" role="status" hidden></div>
 
   <script src="app.js" type="module"></script>

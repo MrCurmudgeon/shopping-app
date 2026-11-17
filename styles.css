@@ -9,11 +9,10 @@
   --danger: #c0392b;
   --checked: #9aa39e;
   --radius: 12px;
-  color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #131715;
     --surface: #1c221f;
     --text: #e8ece9;
@@ -23,7 +22,21 @@
     --accent-text: #0d1310;
     --danger: #ef6b5b;
     --checked: #5f6a64;
+    color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #131715;
+  --surface: #1c221f;
+  --text: #e8ece9;
+  --muted: #93a098;
+  --border: #2c3430;
+  --accent: #4caf78;
+  --accent-text: #0d1310;
+  --danger: #ef6b5b;
+  --checked: #5f6a64;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -75,11 +88,21 @@ button.danger { color: var(--danger); }
 
 .app-header {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 5;
   background: var(--accent);
   color: var(--accent-text);
-  padding: calc(12px + env(safe-area-inset-top)) 16px 0;
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+}
+
+/* Paints the notch / status-bar band above the sticky header. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--accent);
 }
 
 .list-picker {
@@ -99,7 +122,7 @@ button.danger { color: var(--danger); }
   padding-left: 0;
 }
 
-.list-picker select option { color: #1d2420; background: #fff; }
+.list-picker select option { color: var(--text); background: var(--surface); }
 
 .icon-btn {
   background: rgba(255, 255, 255, 0.15);
@@ -119,7 +142,7 @@ button.danger { color: var(--danger); }
 
 .progress {
   height: 4px;
-  margin: 0 -16px;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
   background: rgba(0, 0, 0, 0.15);
 }
 
@@ -133,7 +156,9 @@ button.danger { color: var(--danger); }
 main {
   max-width: 720px;
   margin: 0 auto;
-  padding: 16px;
+  padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 
 .add-form {
