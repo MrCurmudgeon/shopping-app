@@ -16,6 +16,16 @@ plain HTML/CSS/JS with no build step and no dependencies, and you can install it
 - Works offline (service worker). Data is saved in the browser (`localStorage`) and stays in sync across tabs.
 - Light and dark mode, mobile-first layout.
 
+### Receipts and insights
+
+- **Scan a receipt photo.** The text is read on the phone with [Tesseract.js](https://tesseract.projectnaptha.com/); the photo is never uploaded. The first scan downloads the reader (a few MB) from jsDelivr.
+- **Paste receipt text** from emailed or online receipts, or **type a receipt in**.
+- **Review before saving**: the app picks out store, date, items, quantities, weights, discounts and the total, and flags a mismatch with the total. When you rename an abbreviated item ("BNNS ORG" → "Organic bananas"), it remembers that for next time.
+- **Insights**: spend per week, by category, most-bought items, price changes, and averages per week and per shop.
+- **Next week's shop**: suggests the items you're due to buy again, based on how often you usually buy them. Add them to your list in one tap.
+- **Back up and restore** all your data as a file, since it lives only on your device.
+- Try it straight away with **sample receipts** (Insights tab), then remove them.
+
 ## Run it
 
 ```sh
@@ -46,7 +56,7 @@ The single file doesn't include offline caching.
 ## Test
 
 ```sh
-npm test           # unit tests for parsing and categorisation (Node 18+)
+npm test           # unit tests for parsing, categorisation, receipts and predictions (Node 18+)
 ```
 
 ## Files
@@ -57,5 +67,10 @@ npm test           # unit tests for parsing and categorisation (Node 18+)
 | `styles.css` | Styles (light/dark) |
 | `app.js` | UI, state and persistence |
 | `lib.js` | Pure helpers: input parsing, category guessing, grouping |
+| `receipts.js` | Receipt text parser (store, date, items, discounts, total) |
+| `insights.js` | Spending analytics and next-shop predictions |
+| `receipts-ui.js` | Receipts and Insights screens, photo scanning |
+| `format.js` | Money and date formatting for your locale |
+| `sample-data.js` | Example receipts for trying Insights |
 | `sw.js` | Offline cache |
 | `manifest.webmanifest`, `icon.svg` | Install metadata |
