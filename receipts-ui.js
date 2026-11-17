@@ -281,13 +281,27 @@ export function initReceipts(ctx) {
   });
 
   // Backup / restore: everything lives on this device, so make it easy to keep a copy.
-  $('exportBtn').addEventListener('click', () => {
+  $('exportBtn').addEventListener('click', async () => {
+    const name = `grocery-backup-${todayStr()}.json`;
     const blob = new Blob([JSON.stringify(st(), null, 2)], { type: 'application/json' });
-    const a = el('a', { href: URL.createObjectURL(blob), download: `grocery-backup-${todayStr()}.json` });
+    // On iPhone, downloads from a home-screen app are unreliable; the share
+    // sheet lets you "Save to Files" instead.
+    const file = typeof File === 'function' ? new File([blob], name, { type: 'application/json' }) : null;
+    if (file && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'Grocery backup' });
+        ctx.toast('Backup shared');
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    const a = el('a', { href: URL.createObjectURL(blob), download: name });
     document.body.append(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    ctx.toast('Backup saved to your downloads');
   });
   $('importFile').addEventListener('change', async (e) => {
     const file = e.target.files[0];

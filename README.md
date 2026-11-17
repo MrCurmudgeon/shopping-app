@@ -74,4 +74,4 @@ npm test           # unit tests for parsing, categorisation, receipts and predic
 | `format.js` | Money and date formatting for your locale |
 | `sample-data.js` | Example receipts for trying Insights |
 | `sw.js` | Offline cache |
-| `manifest.webmanifest`, `icon.svg` | Install metadata |
+| `manifest.webmanifest`, `icons/` | Install metadata and app icons (`node scripts/render-icons.cjs` regenerates the PNGs from the SVGs) |

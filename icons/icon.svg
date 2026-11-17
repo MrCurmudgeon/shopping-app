@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb35c"/>
+      <stop offset="1" stop-color="#e5543a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.25" cy="0.15" r="0.8">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+
+  <g transform="rotate(-7 256 270)">
+    <!-- card shadow -->
+    <rect x="124" y="104" width="272" height="332" rx="34" fill="#8a2a17" opacity="0.28" transform="translate(10 14)"/>
+    <!-- card -->
+    <rect x="124" y="104" width="272" height="332" rx="34" fill="#fffaf2"/>
+    <!-- clip at top -->
+    <rect x="206" y="84" width="108" height="44" rx="16" fill="#2f7d4f"/>
+    <circle cx="260" cy="100" r="9" fill="#fffaf2"/>
+
+    <!-- row 1: done -->
+    <circle cx="178" cy="190" r="22" fill="#2f7d4f"/>
+    <path d="M167 190 l8 9 l15 -17" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="214" y="180" width="140" height="20" rx="10" fill="#cfd8d2"/>
+    <!-- row 2: done -->
+    <circle cx="178" cy="262" r="22" fill="#2f7d4f"/>
+    <path d="M167 262 l8 9 l15 -17" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="214" y="252" width="110" height="20" rx="10" fill="#cfd8d2"/>
+    <!-- row 3: to do -->
+    <circle cx="178" cy="334" r="20" fill="none" stroke="#2f7d4f" stroke-width="6"/>
+    <rect x="214" y="324" width="128" height="20" rx="10" fill="#33433a"/>
+  </g>
+
+  <!-- apple sticker -->
+  <g transform="translate(352 330) rotate(12)">
+    <circle r="64" fill="#2f7d4f"/>
+    <path d="M0 -14 C -22 -34, -50 -18, -46 10 C -42 40, -18 52, 0 42 C 18 52, 42 40, 46 10 C 50 -18, 22 -34, 0 -14 Z" fill="#ff5a4a"/>
+    <path d="M0 -16 C 2 -30, 8 -38, 16 -42" stroke="#6b3b1f" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M6 -30 C 18 -46, 36 -44, 40 -38 C 30 -26, 16 -24, 6 -30 Z" fill="#9be07a"/>
+    <ellipse cx="-22" cy="-2" rx="8" ry="14" fill="#ffffff" opacity="0.35" transform="rotate(20 -22 -2)"/>
+  </g>
+</svg>
