@@ -1,5 +1,5 @@
 // Offline support: cache the app shell, serve cache-first, refresh in background.
-const CACHE = 'grocery-v1';
+const CACHE = 'grocery-v2';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'lib.js', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => {

@@ -22,8 +22,17 @@ plain HTML/CSS/JS with no build step and no dependencies, and you can install it
 npm start          # serves on http://localhost:8000 (uses python3)
 ```
 
-Any static file server works. To install it on a phone, host the folder over HTTPS
-(for example GitHub Pages) and use "Add to Home Screen".
+Any static file server works.
+
+### Install on your phone (GitHub Pages)
+
+1. In the repo on GitHub, open **Settings → Pages**.
+2. Under **Build and deployment**, set **Source** to *Deploy from a branch*, then pick the branch
+   and the `/ (root)` folder and click **Save**.
+3. After about a minute the app is live at `https://<owner>.github.io/shopping-app/`.
+4. Open that address on your phone and add it to the home screen: in Safari, tap **Share → Add to Home Screen**; in Chrome on Android, tap **⋮ → Add to Home screen** or **Install app**.
+
+GitHub Pages for a private repository requires a paid GitHub plan. On a free plan the repository has to be public.
 
 ### Single-file build
 
