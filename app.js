@@ -311,15 +311,19 @@ $('clearCheckedBtn').addEventListener('click', () => {
 
 $('shareBtn').addEventListener('click', async () => {
   const text = listToText(currentList());
-  try {
-    if (navigator.share) {
+  if (navigator.share) {
+    try {
       await navigator.share({ title: currentList().name, text });
       return;
+    } catch (err) {
+      if (err?.name === 'AbortError') return; // user closed the share sheet
     }
+  }
+  try {
     await navigator.clipboard.writeText(text);
     toast('List copied to clipboard');
-  } catch (err) {
-    if (err?.name !== 'AbortError') toast('Could not share list');
+  } catch {
+    toast('Copying is blocked here – select the items manually');
   }
 });
 
@@ -330,35 +334,59 @@ $('listSelect').addEventListener('change', (e) => {
   render();
 });
 
-$('newListBtn').addEventListener('click', () => {
-  const name = prompt('Name for the new list', 'New list');
-  if (!name?.trim()) return;
-  const id = uid();
-  state.lists.push({ id, name: name.trim(), items: [] });
-  state.currentListId = id;
+// Name dialog, used for both "new list" and "rename list".
+let nameMode = 'new';
+function openNameDialog(mode) {
+  nameMode = mode;
+  $('nameTitle').textContent = mode === 'new' ? 'New list' : 'Rename list';
+  $('nameInput').value = mode === 'new' ? '' : currentList().name;
+  $('nameInput').placeholder = 'e.g. Weekly shop, BBQ party';
+  $('nameDialog').showModal();
+  $('nameInput').select();
+}
+
+$('nameDialog').addEventListener('close', () => {
+  const name = $('nameInput').value.trim();
+  if ($('nameDialog').returnValue !== 'save' || !name) return;
+  if (nameMode === 'new') {
+    const id = uid();
+    state.lists.push({ id, name, items: [] });
+    state.currentListId = id;
+  } else {
+    currentList().name = name;
+  }
   save();
   render();
 });
+
+$('newListBtn').addEventListener('click', () => openNameDialog('new'));
 
 $('listMenuBtn').addEventListener('click', () => $('listDialog').showModal());
 
 $('listDialog').addEventListener('close', () => {
   const list = currentList();
   switch ($('listDialog').returnValue) {
-    case 'rename': {
-      const name = prompt('Rename list', list.name);
-      if (name?.trim()) list.name = name.trim();
-      break;
-    }
+    case 'rename':
+      openNameDialog('rename');
+      return;
     case 'uncheck':
       list.items.forEach((i) => { i.checked = false; });
       break;
-    case 'delete':
-      if (!confirm(`Delete "${list.name}" and its ${list.items.length} items?`)) return;
+    case 'delete': {
+      const index = state.lists.indexOf(list);
       state.lists = state.lists.filter((l) => l.id !== list.id);
       if (!state.lists.length) state = { ...defaultState(), history: state.history };
       state.currentListId = state.lists[0].id;
-      break;
+      save();
+      render();
+      toast(`Deleted "${list.name}"`, () => {
+        state.lists.splice(Math.min(index, state.lists.length), 0, list);
+        state.currentListId = list.id;
+        save();
+        render();
+      });
+      return;
+    }
     default:
       return;
   }

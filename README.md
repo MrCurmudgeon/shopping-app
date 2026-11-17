@@ -25,6 +25,15 @@ npm start          # serves on http://localhost:8000 (uses python3)
 Any static file server works. To install it on a phone, host the folder over HTTPS
 (for example GitHub Pages) and use "Add to Home Screen".
 
+### Single-file build
+
+```sh
+node scripts/build-single.mjs   # writes dist/grocery-list.html
+```
+
+This puts the whole app into one HTML file, for hosts that serve a single page.
+The single file doesn't include offline caching.
+
 ## Test
 
 ```sh
