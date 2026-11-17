@@ -13,6 +13,7 @@ const js = MODULES.map((f) => `// ---- ${f} ----\n${read(f)
   // Several modules define the same tiny `$` helper; keep only the first.
   .replace(/(const \$ = \(id\) => document\.getElementById\(id\);\n)([\s\S]*)/, (m, first, rest) => first + rest.split(first).join(''));
 const body = html.slice(html.indexOf('<body>') + 6, html.indexOf('</body>'))
+  .replace('src="icons/avatar.svg"', `src="data:image/svg+xml,${encodeURIComponent(read('icons/avatar.svg'))}"`)
   .replace(/\s*<script src="app\.js"[^>]*><\/script>/, '');
 const icon = `data:image/svg+xml,${encodeURIComponent(read('icons/icon.svg'))}`;
 

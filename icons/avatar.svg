@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="31 84 340 340">
+  <defs>
+    <clipPath id="round"><circle cx="201" cy="254" r="170"/></clipPath>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb35c"/>
+      <stop offset="1" stop-color="#e5543a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.25" cy="0.15" r="0.8">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="skin" cx="0.42" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#f7cdb4"/>
+      <stop offset="0.7" stop-color="#eeb393"/>
+      <stop offset="1" stop-color="#dc9878"/>
+    </radialGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6aa2e0"/>
+      <stop offset="1" stop-color="#4b80c4"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="1" height="1">
+      <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" values="0 0 0 0 0.30  0 0 0 0 0.25  0 0 0 0 0.21  0 0 0 2.2 -0.85"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect x="31" y="84" width="340" height="340" fill="#fff1e2"/>
+    <g id="me" transform="translate(-34 6)">
+  <!-- shirt / shoulders -->
+  <path d="M18 512 C 26 432, 100 392, 168 384 L 302 384 C 370 392, 444 432, 452 512 Z" fill="url(#shirt)"/>
+  <!-- neck -->
+  <path d="M176 320 L 174 392 Q 235 430 296 392 L 294 320 Z" fill="#d8967a"/>
+  <path d="M176 352 Q 235 380 294 352 L 294 340 Q 235 368 176 340 Z" fill="#c9856a" opacity="0.6"/>
+  <!-- collar -->
+  <path d="M168 388 Q 235 446 302 388" stroke="#3f72b5" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+  <!-- ears -->
+  <ellipse cx="128" cy="258" rx="21" ry="32" fill="#e6a585"/>
+  <ellipse cx="131" cy="259" rx="9" ry="17" fill="#d18c6d"/>
+  <ellipse cx="342" cy="258" rx="21" ry="32" fill="#e6a585"/>
+  <ellipse cx="339" cy="259" rx="9" ry="17" fill="#d18c6d"/>
+
+  <!-- head -->
+  <path d="M235 98 C 314 98, 344 156, 342 226 C 341 280, 334 318, 312 346 C 292 370, 266 380, 235 381 C 204 380, 178 370, 158 346 C 136 318, 129 280, 128 226 C 126 156, 156 98, 235 98 Z" fill="url(#skin)"/>
+  <!-- scalp shine -->
+  <ellipse cx="200" cy="138" rx="46" ry="22" fill="#ffffff" opacity="0.35" transform="rotate(-18 205 150)"/>
+  <!-- forehead lines -->
+  <path d="M200 176 q 35 -8 70 0 M208 190 q 27 -6 54 0" stroke="#d99a7c" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- stubble: beard and moustache -->
+  <path d="M134 262 C 136 300, 142 326, 160 348 C 180 372, 206 381, 235 381 C 264 381, 290 372, 310 348 C 328 326, 334 300, 336 262 C 326 290, 312 302, 296 306 C 282 292, 260 284, 235 286 C 210 284, 188 292, 174 306 C 158 302, 144 290, 134 262 Z" fill="#a39282" opacity="0.5"/>
+  <path d="M134 262 C 136 300, 142 326, 160 348 C 180 372, 206 381, 235 381 C 264 381, 290 372, 310 348 C 328 326, 334 300, 336 262 C 326 290, 312 302, 296 306 C 282 292, 260 284, 235 286 C 210 284, 188 292, 174 306 C 158 302, 144 290, 134 262 Z" fill="#000" filter="url(#grain)" opacity="0.9"/>
+  <!-- lighter, greyer chin -->
+  <ellipse cx="235" cy="358" rx="44" ry="18" fill="#d9d0c6" opacity="0.18"/>
+  <!-- eyebrows -->
+  <path d="M170 224 Q 196 210 224 220" stroke="#463830" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M246 220 Q 274 210 300 224" stroke="#463830" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+  <!-- eyes: relaxed, slightly narrowed -->
+  <path d="M182 244 Q 200 232 218 244 Q 200 252 182 244 Z" fill="#ffffff"/>
+  <circle cx="201" cy="243" r="7" fill="#6f8fa6"/>
+  <circle cx="201" cy="243" r="3.2" fill="#22303a"/>
+  <path d="M180 243 Q 200 229 220 242" stroke="#7a4d3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M252 244 Q 270 232 288 244 Q 270 252 252 244 Z" fill="#ffffff"/>
+  <circle cx="270" cy="243" r="7" fill="#6f8fa6"/>
+  <circle cx="270" cy="243" r="3.2" fill="#22303a"/>
+  <path d="M250 242 Q 270 229 290 243" stroke="#7a4d3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- smile lines at the eyes -->
+  <path d="M172 250 l -8 4 M298 250 l 8 4" stroke="#d99a7c" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- nose -->
+  <path d="M229 240 C 228 258, 222 268, 214 278 C 206 290, 216 302, 235 302 C 254 302, 264 290, 256 278 C 248 268, 242 258, 241 240" fill="#eba08a"/>
+  <ellipse cx="235" cy="284" rx="15" ry="12" fill="#f0a993"/>
+  <ellipse cx="231" cy="280" rx="5" ry="3.5" fill="#fff" opacity="0.35"/>
+  <ellipse cx="224" cy="295" rx="6" ry="3.5" fill="#8f4f40" opacity="0.8"/>
+  <ellipse cx="246" cy="295" rx="6" ry="3.5" fill="#8f4f40" opacity="0.8"/>
+  <!-- closed-mouth half smile -->
+  <path d="M208 330 Q 236 342 266 328" stroke="#8a4636" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M266 328 q 6 -2 9 -8" stroke="#8a4636" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <path d="M220 340 Q 237 346 254 340" stroke="#c98370" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+  </g>
+  </g>
+</svg>
