@@ -7,6 +7,7 @@ import {
   weeklySpend, summary, categorySpend, topItems, priceChanges, predictNextShop, predictionReason, receiptTotal,
 } from './insights.js';
 import { makeSampleReceipts } from './sample-data.js';
+import { categoryIcon } from './category-icons.js';
 import { money, moneyShort, shortDate, todayStr, DAY_FIRST } from './format.js';
 
 const TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
@@ -411,7 +412,7 @@ export function initReceipts(ctx) {
     const max = Math.max(...rows.map((r) => r.total), 1);
     const sum = rows.reduce((s, r) => s + r.total, 0);
     return el('ul', { class: 'hbars' }, rows.map((r) => el('li', { dataset: { cat: r.category } },
-      el('span', { class: 'hb-label' }, r.category),
+      el('span', { class: 'hb-label' }, el('span', { class: 'cat-tile small' }, categoryIcon(r.category)), r.category),
       el('span', { class: 'hb-track' }, el('span', { class: 'hb-fill', style: `width:${(r.total / max) * 100}%` })),
       el('span', { class: 'hb-value' }, money(r.total), el('small', {}, ` ${Math.round((r.total / sum) * 100)}%`)))));
   }

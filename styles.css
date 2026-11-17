@@ -33,6 +33,7 @@
   --c-household: #5a7282;
   --c-care: #d0528f;
   --c-other: #8a7f77;
+  --cat-ink: #ffffff;
   --radius: 14px;
   --tab-h: 60px;
   --font-display: ui-rounded, "Nunito", "SF Pro Rounded", system-ui, -apple-system, sans-serif;
@@ -74,6 +75,7 @@
     --c-household: #9ab2c2;
     --c-care: #f28fc4;
     --c-other: #b8ada4;
+    --cat-ink: #1d1714;
     color-scheme: dark;
   }
 }
@@ -113,6 +115,7 @@
   --c-household: #9ab2c2;
   --c-care: #f28fc4;
   --c-other: #b8ada4;
+  --cat-ink: #1d1714;
   color-scheme: dark;
 }
 
@@ -338,14 +341,6 @@ main {
   color: var(--text);
 }
 
-.category h3::before {
-  content: "";
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
-  background: var(--cat);
-  flex-shrink: 0;
-}
 
 .category h3 .count {
   font-family: system-ui, -apple-system, sans-serif;
@@ -909,7 +904,6 @@ dialog label.inline input { width: 7rem; }
 }
 
 .hb-label { display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hb-label::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: var(--cat); flex-shrink: 0; }
 .hb-track { height: 10px; background: var(--grid); border-radius: 4px; overflow: hidden; }
 .hb-fill { display: block; height: 100%; background: var(--cat); border-radius: 0 4px 4px 0; }
 .hb-value { font-variant-numeric: tabular-nums; text-align: right; min-width: 5.5rem; }
@@ -981,3 +975,33 @@ dialog h2, .card h2, .empty-card h2, .tile-value, .section-title, .r-heading {
 .predict { border-color: var(--accent); border-width: 2px; }
 dialog { border-radius: 20px; }
 .toast { font-weight: 600; }
+
+/* ---------- Aisle icons ---------- */
+
+.cat-tile {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--cat);
+  color: var(--cat-ink);
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--cat) 35%, transparent);
+}
+
+.cat-tile.small { width: 22px; height: 22px; border-radius: 7px; box-shadow: none; }
+
+.cat-icon {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cat-tile.small .cat-icon { width: 14px; height: 14px; stroke-width: 2.2; }
+.category h3 { gap: 10px; }
+.hbars li { grid-template-columns: minmax(0, 8.5rem) 1fr auto; }
